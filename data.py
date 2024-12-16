@@ -20,7 +20,7 @@ def get_data():
     x = df.drop(columns=["FTR", "FTHG", "FTAG"])
 
     # Most recent games
-    test_indices = df.index.isin(df.sort_values("Date").tail(10).index)
+    test_indices = df.index.isin(df.sort_values("Date").tail(50).index)
 
     x_train = x[~test_indices]
     y_train = y[~test_indices]
