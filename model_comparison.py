@@ -44,6 +44,7 @@ class Bet365:
     def should_bet(self, expected_values):
         return True
 
+
 class XGB:
     def __init__(self, threshold, odds_only=False, with_elo=False, **kwargs):
         self.model = XGBClassifier(**kwargs)
@@ -59,12 +60,10 @@ class XGB:
                 "home_points_last_5",
                 "away_goals_last_5",
                 "away_points_last_5",
-
                 # "home_goals_last_3",
                 # "home_points_last_3",
                 # "away_goals_last_3",
                 # "away_points_last_3",
-
                 "B365H",
                 "B365D",
                 "B365A",
@@ -159,7 +158,9 @@ for name, model in models.items():
     if num_bets > 0:
         metrics[name]["Predicted ROI (%)"] = predicted_earnings / num_bets * 100
         metrics[name]["Standard deviation ROI"] = stddev_earnings / num_bets * 100
-        metrics[name]["Worst quartile ROI (%)"] = worst_quartile_earnings / num_bets * 100
+        metrics[name]["Worst quartile ROI (%)"] = (
+            worst_quartile_earnings / num_bets * 100
+        )
         metrics[name]["ROI (%)"] = earnings / num_bets * 100
 
 df = pd.DataFrame(metrics)
@@ -168,7 +169,12 @@ print(df.T)
 
 x = thresholds
 for column in ["ROI (%)", "Worst quartile ROI (%)"]:
-    y = np.array([metrics[get_xgb_name(threshold)].get(column, np.nan) for threshold in thresholds])
+    y = np.array(
+        [
+            metrics[get_xgb_name(threshold)].get(column, np.nan)
+            for threshold in thresholds
+        ]
+    )
     plt.scatter(x, y, label=column)
 
 xlim = plt.xlim()

@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 
+
 class EloOnly:
     def __init__(self, k_factor, home_advantage):
         self.k_factor = k_factor
@@ -33,7 +34,9 @@ class EloOnly:
             if away_team not in self.elo_ratings:
                 self.elo_ratings[away_team] = self.initial_elo
 
-            pregame_elos.append((self.elo_ratings[home_team], self.elo_ratings[away_team]))
+            pregame_elos.append(
+                (self.elo_ratings[home_team], self.elo_ratings[away_team])
+            )
             home_elo = self.elo_ratings[home_team] + self.home_advantage
             away_elo = self.elo_ratings[away_team]
 
@@ -62,7 +65,9 @@ class EloOnly:
         predictions = []
         for _, row in x.iterrows():
             home_team, away_team = row["HomeTeam"], row["AwayTeam"]
-            home_elo = self.elo_ratings.get(home_team, self.initial_elo) + self.home_advantage
+            home_elo = (
+                self.elo_ratings.get(home_team, self.initial_elo) + self.home_advantage
+            )
             away_elo = self.elo_ratings.get(away_team, self.initial_elo)
 
             # Calculate win probabilities
@@ -84,7 +89,9 @@ class EloOnly:
         probabilities = []
         for _, row in x.iterrows():
             home_team, away_team = row["HomeTeam"], row["AwayTeam"]
-            home_elo = self.elo_ratings.get(home_team, self.initial_elo) + self.home_advantage
+            home_elo = (
+                self.elo_ratings.get(home_team, self.initial_elo) + self.home_advantage
+            )
             away_elo = self.elo_ratings.get(away_team, self.initial_elo)
 
             # Calculate win probabilities

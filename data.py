@@ -11,7 +11,20 @@ mapping = ["H", "D", "A"]
 
 def get_data():
     df = get_raw_data()
-    df = df[["FTR", "FTHG", "FTAG", "HomeTeam", "AwayTeam", "Date", "days_since_first_game", "B365H", "B365D", "B365A"]].copy()
+    df = df[
+        [
+            "FTR",
+            "FTHG",
+            "FTAG",
+            "HomeTeam",
+            "AwayTeam",
+            "Date",
+            "days_since_first_game",
+            "B365H",
+            "B365D",
+            "B365A",
+        ]
+    ].copy()
     y = df["FTR"].apply(lambda x: mapping.index(x))
     df = compute_current_form_last_n_games(df, 5)
     df = compute_current_form_last_n_games(df, 3)
@@ -45,6 +58,7 @@ def get_raw_data() -> pd.DataFrame:
     df["days_since_first_game"] = (df["Date"] - df["Date"].min()).dt.days
     return df
 
+
 def compute_elo(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
     elo_model = EloOnly(k_factor=20, home_advantage=200)
@@ -54,7 +68,7 @@ def compute_elo(df: pd.DataFrame) -> pd.DataFrame:
     for i, (home_elo, away_elo) in enumerate(pregame_elos):
         df.loc[i, "HomeElo"] = home_elo
         df.loc[i, "AwayElo"] = away_elo
-    
+
     return df
 
 
