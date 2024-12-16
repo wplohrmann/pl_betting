@@ -154,12 +154,13 @@ for name, model in models.items():
 
     # TODO: Add the Brier score
     metrics[name]["Accuracy"] = accuracy * 100
-    # metrics[name]["Earnings"] = earnings
-    metrics[name]["Predicted ROI (%)"] = predicted_earnings / num_bets * 100
-    metrics[name]["Standard deviation ROI"] = stddev_earnings / num_bets * 100
-    metrics[name]["Worst quartile ROI (%)"] = worst_quartile_earnings / num_bets * 100
     metrics[name]["Number of bets"] = num_bets
-    metrics[name]["ROI (%)"] = earnings / num_bets * 100
+    # metrics[name]["Earnings"] = earnings
+    if num_bets > 0:
+        metrics[name]["Predicted ROI (%)"] = predicted_earnings / num_bets * 100
+        metrics[name]["Standard deviation ROI"] = stddev_earnings / num_bets * 100
+        metrics[name]["Worst quartile ROI (%)"] = worst_quartile_earnings / num_bets * 100
+        metrics[name]["ROI (%)"] = earnings / num_bets * 100
 
 df = pd.DataFrame(metrics)
 print()
@@ -167,7 +168,7 @@ print(df.T)
 
 x = thresholds
 for column in ["ROI (%)", "Worst quartile ROI (%)"]:
-    y = np.array([metrics[get_xgb_name(threshold)][column] for threshold in thresholds])
+    y = np.array([metrics[get_xgb_name(threshold)].get(column, np.nan) for threshold in thresholds])
     plt.scatter(x, y, label=column)
 
 xlim = plt.xlim()
