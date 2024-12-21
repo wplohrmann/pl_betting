@@ -115,7 +115,7 @@ models = {
     "Bet365": Bet365(),
 }
 
-x_train, y_train, x_test, y_test = get_data(50)
+x_train, y_train, x_test, y_test = get_data(100)
 print("Number of test games:", len(x_test))
 print("Number of training games:", len(x_train))
 

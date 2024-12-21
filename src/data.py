@@ -28,6 +28,8 @@ def get_data(
             "B365A",
         ]
     ].copy()
+    df = df[~pd.isna(df["FTR"])]
+    assert len(df[df.isna().any(axis=1)]) == 0
     y = df["FTR"].apply(lambda x: mapping.index(x))
     df = compute_current_form_last_n_games(df, 5)
     df = compute_current_form_last_n_games(df, 3)
@@ -60,7 +62,15 @@ def get_raw_data() -> pd.DataFrame:
     df["HomeTeam"] = df["HomeTeam"].astype("category")
     df["AwayTeam"] = df["AwayTeam"].astype("category")
     df["Referee"] = df["Referee"].astype("category")
-    df["Date"] = pd.to_datetime(df["Date"], format="%d/%m/%Y")
+    def parse_date(date_str):
+        try:
+            # Try parsing with dd/mm/yy
+            return pd.to_datetime(date_str, format='%d/%m/%y')
+        except ValueError:
+            # Fallback to dd/mm/yyyy
+            return pd.to_datetime(date_str, format='%d/%m/%Y')
+    df["Date"] = df["Date"].apply(parse_date)
+    df.sort_values("Date", inplace=True)
     df["days_since_first_game"] = (df["Date"] - df["Date"].min()).dt.days
     return df
 
@@ -70,10 +80,16 @@ def compute_elo(df: pd.DataFrame) -> pd.DataFrame:
     elo_model = EloOnly(k_factor=20, home_advantage=200)
     y = df["FTR"].apply(lambda x: mapping.index(x))
     pregame_elos = elo_model.fit(df, y)
-    assert list(df.index) == list(range(len(df)))
+    df["HomeElo"] = pd.NA
+    df["AwayElo"] = pd.NA
+    home_elo_index = df.columns.get_loc("HomeElo")
+    away_elo_index = df.columns.get_loc("AwayElo")
     for i, (home_elo, away_elo) in enumerate(pregame_elos):
-        df.loc[i, "HomeElo"] = home_elo
-        df.loc[i, "AwayElo"] = away_elo
+        df.iloc[i, home_elo_index] = home_elo
+        df.iloc[i, away_elo_index] = away_elo
+
+    df["HomeElo"] = df["HomeElo"].astype(float)
+    df["AwayElo"] = df["AwayElo"].astype(float)
 
     return df
 
