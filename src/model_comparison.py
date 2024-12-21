@@ -50,7 +50,13 @@ class Bet365(Base):
 
 
 class XGB(Base):
-    def __init__(self, threshold: float, odds_only: bool=False, with_elo: bool=False, **kwargs: Any) -> None:
+    def __init__(
+        self,
+        threshold: float,
+        odds_only: bool = False,
+        with_elo: bool = False,
+        **kwargs: Any,
+    ) -> None:
         self.model = XGBClassifier(**kwargs)
         if odds_only:
             self.x_columns = [
@@ -91,6 +97,7 @@ class XGB(Base):
 
 def get_xgb_name(t: float) -> str:
     return f"XGBoost ({t:.2f})"
+
 
 thresholds = np.linspace(0, 0.8, 9)
 models = {

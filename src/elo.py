@@ -6,8 +6,15 @@ from sklearn.metrics import log_loss
 
 from src.base import Base
 
+
 class EloOnly(Base):
-    def __init__(self, k_factor: float, home_advantage: float, max_draw_prob: float = 0.3, draw_width: float = 400) -> None:
+    def __init__(
+        self,
+        k_factor: float,
+        home_advantage: float,
+        max_draw_prob: float = 0.3,
+        draw_width: float = 400,
+    ) -> None:
         self.k_factor = k_factor
         self.initial_elo = 1500
         self.home_advantage = home_advantage
@@ -15,29 +22,35 @@ class EloOnly(Base):
         self.draw_width = draw_width
         self.elo_ratings: Dict[str, float] = {}
 
-    def _expected_scores(self, elo_a: float, elo_b: float) -> Tuple[float, float, float]:
+    def _expected_scores(
+        self, elo_a: float, elo_b: float
+    ) -> Tuple[float, float, float]:
         """Calculate probabilities for home win, draw, and away win."""
         prob_home_win = 1 / (1 + 10 ** ((elo_b - elo_a) / self.draw_width))
         prob_away_win = 1 - prob_home_win
         prob_draw = self._draw_probability(elo_a, elo_b)
 
         # Adjust home and away probabilities to account for draw
-        prob_home_win *= (1 - prob_draw)
-        prob_away_win *= (1 - prob_draw)
+        prob_home_win *= 1 - prob_draw
+        prob_away_win *= 1 - prob_draw
 
         return prob_home_win, prob_draw, prob_away_win
 
-    def _draw_probability(self, elo_a: float, elo_b: float)-> float:
+    def _draw_probability(self, elo_a: float, elo_b: float) -> float:
         """Calculate the draw probability based on the Elo difference."""
         elo_diff = abs(elo_a - elo_b)
-        return self.max_draw_prob * np.exp(-elo_diff / 400)  # Decrease with larger Elo difference
+        return self.max_draw_prob * np.exp(
+            -elo_diff / 400
+        )  # Decrease with larger Elo difference
 
-    def _update_elo(self, elo_a: float, elo_b:float, actual_score: float) -> float:
+    def _update_elo(self, elo_a: float, elo_b: float, actual_score: float) -> float:
         """Update ELO rating for a single team based on the match result."""
         expected_score = 1 / (1 + 10 ** ((elo_b - elo_a) / 400))
         return elo_a + self.k_factor * (actual_score - expected_score)
 
-    def _fit_fixed_hyperparameters(self, x: pd.DataFrame, y: pd.Series) -> List[Tuple[float, float]]:
+    def _fit_fixed_hyperparameters(
+        self, x: pd.DataFrame, y: pd.Series
+    ) -> List[Tuple[float, float]]:
         """Fit the model to the match results.
         x: DataFrame with columns ["HomeTeam", "AwayTeam"]
         y: Series with values 0 (home win), 1 (draw), 2 (away win)
@@ -50,9 +63,13 @@ class EloOnly(Base):
 
             # Initialize ELO ratings if teams are new
             if home_team not in self.elo_ratings:
-                self.elo_ratings[home_team] = min(self.elo_ratings.values(), default=self.initial_elo)
+                self.elo_ratings[home_team] = min(
+                    self.elo_ratings.values(), default=self.initial_elo
+                )
             if away_team not in self.elo_ratings:
-                self.elo_ratings[away_team] = min(self.elo_ratings.values(), default=self.initial_elo)
+                self.elo_ratings[away_team] = min(
+                    self.elo_ratings.values(), default=self.initial_elo
+                )
 
             pregame_elos.append(
                 (self.elo_ratings[home_team], self.elo_ratings[away_team])
@@ -81,7 +98,9 @@ class EloOnly(Base):
 
     def fit(self, x: pd.DataFrame, y: pd.Series) -> List[Tuple[float, float]]:
         def objective(params: List[float]) -> float:
-            self.k_factor, self.home_advantage, self.max_draw_prob, self.draw_width = params
+            self.k_factor, self.home_advantage, self.max_draw_prob, self.draw_width = (
+                params
+            )
             self._fit_fixed_hyperparameters(x, y)
             y_pred_proba = self.predict_proba(x)
             return log_loss(y, y_pred_proba)
@@ -91,7 +110,12 @@ class EloOnly(Base):
 
         # result = minimize(objective, initial_params, bounds=bounds, method='L-BFGS-B')
         # self.k_factor, self.home_advantage, self.max_draw_prob, self.draw_width = result.x
-        self.k_factor, self.home_advantage, self.max_draw_prob, self.draw_width = 7.87167833,  35.02435776,   0.28850455, 242.1318268
+        self.k_factor, self.home_advantage, self.max_draw_prob, self.draw_width = (
+            7.87167833,
+            35.02435776,
+            0.28850455,
+            242.1318268,
+        )
 
         return self._fit_fixed_hyperparameters(x, y)
 
@@ -109,7 +133,9 @@ class EloOnly(Base):
             away_elo = self.elo_ratings.get(away_team, self.initial_elo)
 
             # Get probabilities
-            prob_home_win, prob_draw, prob_away_win = self._expected_scores(home_elo, away_elo)
+            prob_home_win, prob_draw, prob_away_win = self._expected_scores(
+                home_elo, away_elo
+            )
             probs = [prob_home_win, prob_draw, prob_away_win]
             predictions.append(np.argmax(probs))
 
@@ -129,7 +155,9 @@ class EloOnly(Base):
             away_elo = self.elo_ratings.get(away_team, self.initial_elo)
 
             # Get probabilities
-            prob_home_win, prob_draw, prob_away_win = self._expected_scores(home_elo, away_elo)
+            prob_home_win, prob_draw, prob_away_win = self._expected_scores(
+                home_elo, away_elo
+            )
             probabilities[i] = [prob_home_win, prob_draw, prob_away_win]
 
         return probabilities

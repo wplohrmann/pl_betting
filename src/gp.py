@@ -7,7 +7,9 @@ from src.base import Base
 
 class GP(Base):
     def __init__(self) -> None:
-        self.model = GaussianProcessClassifier(max_iter_predict=100, n_restarts_optimizer=30, warm_start=True)
+        self.model = GaussianProcessClassifier(
+            max_iter_predict=100, n_restarts_optimizer=30, warm_start=True
+        )
         self.columns = [
             "home_goals_last_5",
             "home_points_last_5",
