@@ -1,4 +1,5 @@
 import os
+from tqdm import tqdm, trange
 import requests
 
 
@@ -7,8 +8,9 @@ def main(oldest_year: int) -> None:
     for f in os.listdir("."):
         if f.startswith("matches_") and f.endswith(".csv"):
             os.remove(f)
-    for year in range(oldest_year, 2025):
-        print("Downloading data for year", year)
+    pbar = trange(oldest_year, 2025)
+    for year in pbar:
+        pbar.set_description(f"Downloading data for year {year}")
         download_data(year)
 
 

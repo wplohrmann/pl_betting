@@ -10,3 +10,4 @@ scipy
 scipy-stubs
 requests
 types-requests
+tqdm
