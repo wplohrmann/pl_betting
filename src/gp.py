@@ -2,8 +2,10 @@ import numpy as np
 import pandas as pd
 from sklearn.gaussian_process import GaussianProcessClassifier
 
+from src.base import Base
 
-class GP:
+
+class GP(Base):
     def __init__(self) -> None:
         self.model = GaussianProcessClassifier(max_iter_predict=100, n_restarts_optimizer=30, warm_start=True)
         self.columns = [
@@ -16,7 +18,7 @@ class GP:
             "B365A",
         ]
 
-    def fit(self, x: pd.DataFrame, y: pd.DataFrame) -> None:
+    def fit(self, x: pd.DataFrame, y: pd.Series) -> None:
         self.model.fit(x[self.columns], y)
 
     def predict(self, x: pd.DataFrame) -> np.ndarray:

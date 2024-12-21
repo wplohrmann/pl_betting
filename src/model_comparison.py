@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Any, Dict
 import matplotlib.pyplot as plt
 from collections import defaultdict
 import numpy as np
@@ -6,50 +6,51 @@ import pandas as pd
 from xgboost import XGBClassifier
 from sklearn.metrics import log_loss
 
-from data import get_data, mapping
-from elo import EloOnly
+from src.base import Base
+from src.data import get_data, mapping
+from src.elo import EloOnly
 from src.gp import GP
 
 
-class Simple:
-    def fit(self, x, y):
+class Baseline(Base):
+    def fit(self, x: pd.DataFrame, y: pd.Series) -> None:
         avg_home = y[y == 0].count() / y.count()
         avg_draw = y[y == 1].count() / y.count()
         avg_away = y[y == 2].count() / y.count()
         assert avg_home + avg_draw + avg_away == 1
         self.probs = [avg_home, avg_draw, avg_away]
 
-    def predict(self, x):
+    def predict(self, x: pd.DataFrame) -> np.ndarray:
         return np.array([self.probs.index(max(self.probs))] * len(x))
 
-    def predict_proba(self, x):
+    def predict_proba(self, x: pd.DataFrame) -> np.ndarray:
         return np.array([self.probs] * len(x))
 
-    def should_bet(self, expected_values):
+    def should_bet(self, expected_values: np.ndarray) -> bool:
         return True
 
 
-class Bet365:
-    def fit(self, x, y):
+class Bet365(Base):
+    def fit(self, x: pd.DataFrame, y: pd.Series) -> None:
         pass
 
-    def predict(self, x):
+    def predict(self, x: pd.DataFrame) -> np.ndarray:
         odds = x[["B365H", "B365D", "B365A"]].values
         return odds.argmin(axis=1)
 
-    def predict_proba(self, x):
+    def predict_proba(self, x: pd.DataFrame) -> np.ndarray:
         odds = x[["B365H", "B365D", "B365A"]].values
         raw_probs = 1 / odds
         expected_values = raw_probs * (odds - 1) - (1 - raw_probs)
         assert np.isclose(expected_values, 0).all()
         return raw_probs / np.sum(raw_probs, axis=1, keepdims=True)
 
-    def should_bet(self, expected_values):
+    def should_bet(self, expected_values: np.ndarray) -> bool:
         return True
 
 
-class XGB:
-    def __init__(self, threshold, odds_only=False, with_elo=False, **kwargs):
+class XGB(Base):
+    def __init__(self, threshold: float, odds_only: bool=False, with_elo: bool=False, **kwargs: Any) -> None:
         self.model = XGBClassifier(**kwargs)
         if odds_only:
             self.x_columns = [
@@ -75,21 +76,23 @@ class XGB:
             self.x_columns.extend(["AwayElo", "HomeElo"])
         self.threshold = threshold
 
-    def fit(self, x, y):
+    def fit(self, x: pd.DataFrame, y: pd.Series) -> None:
         self.model.fit(x[self.x_columns], y)
 
-    def predict(self, x):
+    def predict(self, x: pd.DataFrame) -> np.ndarray:
         return self.model.predict(x[self.x_columns])
 
-    def predict_proba(self, x):
+    def predict_proba(self, x: pd.DataFrame) -> np.ndarray:
         return self.model.predict_proba(x[self.x_columns])
 
-    def should_bet(self, expected_values):
+    def should_bet(self, expected_values: np.ndarray) -> bool:
         return expected_values.max() > self.threshold
 
 
+def get_xgb_name(t: float) -> str:
+    return f"XGBoost ({t:.2f})"
+
 thresholds = np.linspace(0, 0.8, 9)
-get_xgb_name = lambda t: f"XGBoost ({t:.2f})"
 models = {
     **{
         get_xgb_name(threshold): XGB(
@@ -100,7 +103,7 @@ models = {
     "GP": GP(),
     "Elo (k=20, home advantage=200)": EloOnly(k_factor=20, home_advantage=200),
     "XGB + (no Elo)": XGB(0.0, with_elo=True, enable_categorical=True, max_depth=3),
-    "Baseline": Simple(),
+    "Baseline": Baseline(),
     "XGB (odds only)": XGB(0.0, odds_only=True),
     "Bet365": Bet365(),
 }
@@ -151,8 +154,8 @@ for name, model in models.items():
                 hypothetical_earnings -= 1
         possible_earnings[i] = hypothetical_earnings
 
-    worst_quartile_earnings = np.quantile(possible_earnings, 0.25)
-    stddev_earnings = np.std(possible_earnings)
+    worst_quartile_earnings = np.quantile(possible_earnings, 0.25).item()
+    stddev_earnings = np.std(possible_earnings).item()
 
     accuracy = (predictions == y_test).sum() / len(y_test)
     metrics[name]["Cross-entropy loss"] = log_loss(y_test, probs)

@@ -1,15 +1,16 @@
 from collections import defaultdict
+from typing import Tuple
 import pandas as pd
 
 
 import os
 
-from elo import EloOnly
+from src.elo import EloOnly
 
 mapping = ["H", "D", "A"]
 
 
-def get_data(num_test_matches: int):
+def get_data(num_test_matches: int) -> Tuple[pd.DataFrame, pd.Series, pd.DataFrame, pd.Series]:
     df = get_raw_data()
     df = df[
         [
