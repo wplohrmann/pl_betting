@@ -8,6 +8,7 @@ from sklearn.metrics import log_loss
 
 from data import get_data, mapping
 from elo import EloOnly
+from src.gp import GP
 
 
 class Simple:
@@ -96,6 +97,7 @@ models = {
         )
         for threshold in thresholds
     },
+    "GP": GP(),
     "Elo (k=20, home advantage=200)": EloOnly(k_factor=20, home_advantage=200),
     "XGB + (no Elo)": XGB(0.0, with_elo=True, enable_categorical=True, max_depth=3),
     "Baseline": Simple(),
@@ -103,7 +105,7 @@ models = {
     "Bet365": Bet365(),
 }
 
-x_train, y_train, x_test, y_test = get_data(30)
+x_train, y_train, x_test, y_test = get_data(50)
 print("Number of test games:", len(x_test))
 print("Number of training games:", len(x_train))
 
