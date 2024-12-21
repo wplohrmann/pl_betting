@@ -6,3 +6,5 @@ xgboost
 scikit-learn
 mypy
 black
+scipy
+scipy-stubs
