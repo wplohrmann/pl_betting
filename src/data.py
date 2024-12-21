@@ -46,6 +46,9 @@ def get_data(
 
 
 def get_raw_data() -> pd.DataFrame:
+    # Raw data csvs
+    # can be downloaded from https://www.football-data.co.uk/englandm.php
+    # or run the script src/download_data.py
     dfs = []
     for f in os.listdir("."):
         if f.endswith(".csv"):
