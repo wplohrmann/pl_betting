@@ -2,4 +2,6 @@
 
 set -e
 
-black $(git ls-files | "grep" "\.py$")
+black src
+
+mypy src

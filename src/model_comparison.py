@@ -1,11 +1,12 @@
+from typing import Dict
 import matplotlib.pyplot as plt
 from collections import defaultdict
 import numpy as np
 import pandas as pd
 from xgboost import XGBClassifier
 
-from data import get_data, mapping
-from elo import EloOnly
+from .data import get_data, mapping
+from .elo import EloOnly
 
 
 class Simple:
@@ -105,7 +106,7 @@ x_train, y_train, x_test, y_test = get_data()
 print("Number of test games:", len(x_test))
 print("Number of training games:", len(x_train))
 
-metrics = defaultdict(dict)
+metrics: Dict[str, Dict[str, float]] = defaultdict(dict)
 
 for name, model in models.items():
     model.fit(x_train, y_train)

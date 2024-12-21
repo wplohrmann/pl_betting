@@ -1,6 +1,7 @@
 matplotlib
 numpy
 pandas
+pandas-stubs
 xgboost
 scikit-learn
 mypy
