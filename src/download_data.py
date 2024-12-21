@@ -1,8 +1,14 @@
+import os
 import requests
 
 
 def main(oldest_year: int) -> None:
+    print("Removing existing data")
+    for f in os.listdir("."):
+        if f.startswith("matches_") and f.endswith(".csv"):
+            os.remove(f)
     for year in range(oldest_year, 2025):
+        print("Downloading data for year", year)
         download_data(year)
 
 
