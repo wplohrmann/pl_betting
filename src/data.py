@@ -9,7 +9,7 @@ from elo import EloOnly
 mapping = ["H", "D", "A"]
 
 
-def get_data():
+def get_data(num_test_matches: int):
     df = get_raw_data()
     df = df[
         [
@@ -33,7 +33,7 @@ def get_data():
     x = df.drop(columns=["FTR", "FTHG", "FTAG"])
 
     # Most recent games
-    test_indices = df.index.isin(df.sort_values("Date").tail(50).index)
+    test_indices = df.index.isin(df.sort_values("Date").tail(num_test_matches).index)
 
     x_train = x[~test_indices]
     y_train = y[~test_indices]

@@ -4,9 +4,10 @@ from collections import defaultdict
 import numpy as np
 import pandas as pd
 from xgboost import XGBClassifier
+from sklearn.metrics import log_loss
 
-from .data import get_data, mapping
-from .elo import EloOnly
+from data import get_data, mapping
+from elo import EloOnly
 
 
 class Simple:
@@ -102,7 +103,7 @@ models = {
     "Bet365": Bet365(),
 }
 
-x_train, y_train, x_test, y_test = get_data()
+x_train, y_train, x_test, y_test = get_data(30)
 print("Number of test games:", len(x_test))
 print("Number of training games:", len(x_train))
 
@@ -111,7 +112,6 @@ metrics: Dict[str, Dict[str, float]] = defaultdict(dict)
 for name, model in models.items():
     model.fit(x_train, y_train)
     predictions = model.predict(x_test)
-    accuracy = (predictions == y_test).sum() / len(y_test)
     earnings = 0
     num_bets = 0
     probs = model.predict_proba(x_test)
@@ -152,7 +152,8 @@ for name, model in models.items():
     worst_quartile_earnings = np.quantile(possible_earnings, 0.25)
     stddev_earnings = np.std(possible_earnings)
 
-    # TODO: Add the Brier score
+    accuracy = (predictions == y_test).sum() / len(y_test)
+    metrics[name]["Cross-entropy loss"] = log_loss(y_test, probs)
     metrics[name]["Accuracy"] = accuracy * 100
     metrics[name]["Number of bets"] = num_bets
     # metrics[name]["Earnings"] = earnings
