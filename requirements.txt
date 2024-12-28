@@ -8,3 +8,6 @@ mypy
 black
 scipy
 scipy-stubs
+requests
+types-requests
+tqdm

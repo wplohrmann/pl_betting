@@ -100,7 +100,7 @@ def get_xgb_name(t: float) -> str:
 
 
 thresholds = np.linspace(0, 0.8, 9)
-models = {
+models: Dict[str, Base] = {
     **{
         get_xgb_name(threshold): XGB(
             threshold=threshold, with_elo=True, enable_categorical=True, max_depth=3
@@ -108,14 +108,14 @@ models = {
         for threshold in thresholds
     },
     "GP": GP(),
-    "Elo (k=20, home advantage=200)": EloOnly(k_factor=20, home_advantage=200),
+    "Elo": EloOnly(k_factor=20, home_advantage=200),
     "XGB + (no Elo)": XGB(0.0, with_elo=True, enable_categorical=True, max_depth=3),
     "Baseline": Baseline(),
     "XGB (odds only)": XGB(0.0, odds_only=True),
     "Bet365": Bet365(),
 }
 
-x_train, y_train, x_test, y_test = get_data(50)
+x_train, y_train, x_test, y_test = get_data(100)
 print("Number of test games:", len(x_test))
 print("Number of training games:", len(x_train))
 
