@@ -97,6 +97,8 @@ class EloOnly(Base):
         return pregame_elos
 
     def fit(self, x: pd.DataFrame, y: pd.Series) -> List[Tuple[float, float]]:
+        # First check if the dataframe is sorted
+        assert x["Date"].is_monotonic_increasing
         def objective(params: List[float]) -> float:
             self.k_factor, self.home_advantage, self.max_draw_prob, self.draw_width = (
                 params
@@ -110,12 +112,7 @@ class EloOnly(Base):
 
         # result = minimize(objective, initial_params, bounds=bounds, method='L-BFGS-B')
         # self.k_factor, self.home_advantage, self.max_draw_prob, self.draw_width = result.x
-        self.k_factor, self.home_advantage, self.max_draw_prob, self.draw_width = (
-            7.87167833,
-            35.02435776,
-            0.28850455,
-            242.1318268,
-        )
+        self.k_factor, self.home_advantage, self.max_draw_prob, self.draw_width = ( 3.2047546 ,  39.56654075,   0.29107258, 234.82918812)
 
         return self._fit_fixed_hyperparameters(x, y)
 
@@ -124,22 +121,9 @@ class EloOnly(Base):
         x: DataFrame with columns ["HomeTeam", "AwayTeam"]
         Returns: Array of predictions (0: home win, 1: draw, 2: away win)
         """
-        predictions = []
-        for _, row in x.iterrows():
-            home_team, away_team = row["HomeTeam"], row["AwayTeam"]
-            home_elo = (
-                self.elo_ratings.get(home_team, self.initial_elo) + self.home_advantage
-            )
-            away_elo = self.elo_ratings.get(away_team, self.initial_elo)
+        probs = self.predict_proba(x)
 
-            # Get probabilities
-            prob_home_win, prob_draw, prob_away_win = self._expected_scores(
-                home_elo, away_elo
-            )
-            probs = [prob_home_win, prob_draw, prob_away_win]
-            predictions.append(np.argmax(probs))
-
-        return np.array(predictions)
+        return probs.argmax(axis=1)
 
     def predict_proba(self, x: pd.DataFrame) -> np.ndarray:
         """Predict probabilities for match outcomes.
@@ -148,11 +132,8 @@ class EloOnly(Base):
         """
         probabilities = np.zeros((len(x), 3))
         for i, (_, row) in enumerate(x.iterrows()):
-            home_team, away_team = row["HomeTeam"], row["AwayTeam"]
-            home_elo = (
-                self.elo_ratings.get(home_team, self.initial_elo) + self.home_advantage
-            )
-            away_elo = self.elo_ratings.get(away_team, self.initial_elo)
+            home_elo = row["HomeElo"] + self.home_advantage
+            away_elo = row["AwayElo"]
 
             # Get probabilities
             prob_home_win, prob_draw, prob_away_win = self._expected_scores(
@@ -163,4 +144,4 @@ class EloOnly(Base):
         return probabilities
 
     def should_bet(self, expected_values: np.ndarray) -> bool:
-        return expected_values.max() > 0
+        return expected_values.max() > 0.3
